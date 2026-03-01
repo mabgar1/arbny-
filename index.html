@@ -254,7 +254,7 @@ async function runScan(){
   for(const sport of TR_SPORTS){
     const evts=await fetchTRSport(sport.id,today);
     if(evts.length){const mkts=parseEvents(evts);allMkts=allMkts.concat(mkts);totalEvts+=evts.length;addLog(`${sport.name}: ${evts.length} games → ${mkts.length} markets`,'info');}
-    await sleep(2000);
+    await sleep(4000);
   }
   allArbs=detectArbs(allMkts);
   addLog(`${totalEvts} events · ${allMkts.length} markets · ${allArbs.length} arbs`,allArbs.length>0?'good':'info');
