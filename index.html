@@ -128,7 +128,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13
 <script>
 let settings=loadSettings(),isSleeping=false,botUrl=localStorage.getItem('botUrl')||'';
 let syncTimer=null,countdownTimer=null,countdown=0;
-const SCAN_INTERVAL=60;
+const SCAN_INTERVAL=300;
 let currentFilter='all',allArbs=[],isScanning=false;
 
 function loadSettings(){return{trKey:localStorage.getItem('trKey')||'',minProfit:parseFloat(localStorage.getItem('minProfit')||'0.5'),bankroll:parseFloat(localStorage.getItem('bankroll')||'500')};}
@@ -171,13 +171,16 @@ function toDecimal(v){if(!v||v===0.0001)return 0;const p=parseFloat(v);if(Math.a
 async function fetchTRSport(sportId,date){
   if(!settings.trKey)return[];
   const url=`https://therundown.io/api/v2/sports/${sportId}/events/${date}?key=${settings.trKey}&market_ids=1,2,3&affiliate_ids=${NY_AFF_IDS.join(',')}`;
-  try{
-    const r=await fetch(url);
-    if(r.status===401||r.status===403){addLog('Bad TR key — check Settings','err');return[];}
-    if(r.status===429){addLog('Rate limit — slowing down','warn');return[];}
-    if(!r.ok){addLog(`TR error ${r.status}`,'warn');return[];}
-    return(await r.json()).events||[];
-  }catch(e){addLog('Fetch error: '+e.message,'warn');return[];}
+  for(let attempt=0;attempt<3;attempt++){
+    try{
+      const r=await fetch(url);
+      if(r.status===401||r.status===403){addLog('Bad TR key — check Settings','err');return[];}
+      if(r.status===429){const wait=20000*(attempt+1);addLog(`Rate limit — waiting ${wait/1000}s`,'warn');await new Promise(r=>setTimeout(r,wait));continue;}
+      if(!r.ok){addLog(`TR error ${r.status}`,'warn');return[];}
+      return(await r.json()).events||[];
+    }catch(e){addLog('Fetch error: '+e.message,'warn');return[];}
+  }
+  return[];
 }
 
 function parseEvents(events){
@@ -254,7 +257,7 @@ async function runScan(){
   for(const sport of TR_SPORTS){
     const evts=await fetchTRSport(sport.id,today);
     if(evts.length){const mkts=parseEvents(evts);allMkts=allMkts.concat(mkts);totalEvts+=evts.length;addLog(`${sport.name}: ${evts.length} games → ${mkts.length} markets`,'info');}
-    await sleep(6000);
+    await sleep(10000);
   }
   allArbs=detectArbs(allMkts);
   addLog(`${totalEvts} events · ${allMkts.length} markets · ${allArbs.length} arbs`,allArbs.length>0?'good':'info');
