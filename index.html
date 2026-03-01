@@ -164,7 +164,7 @@ function startSyncPoll(){if(syncTimer)clearInterval(syncTimer);if(!botUrl)return
 
 const NY_BOOKS={3:'DraftKings',24:'FanDuel',10:'BetMGM',22:'Caesars',35:'PointsBet',26:'BetRivers',68:'Resorts World',94:'Bally Bet'};
 const NY_AFF_IDS=Object.keys(NY_BOOKS).map(Number);
-const TR_SPORTS=[{id:4,name:'NBA'},{id:1,name:'NFL'},{id:3,name:'MLB'},{id:6,name:'NHL'},{id:5,name:'NCAAB'},{id:9,name:'MMA'}];
+const TR_SPORTS=[{id:4,name:'NBA'},{id:6,name:'NHL'},{id:5,name:'NCAAB'},{id:9,name:'MMA'}];
 
 function toDecimal(v){if(!v||v===0.0001)return 0;const p=parseFloat(v);if(Math.abs(p)>=100)return p>0?(p/100)+1:(100/Math.abs(p))+1;return p>1?p:0;}
 
@@ -254,7 +254,7 @@ async function runScan(){
   for(const sport of TR_SPORTS){
     const evts=await fetchTRSport(sport.id,today);
     if(evts.length){const mkts=parseEvents(evts);allMkts=allMkts.concat(mkts);totalEvts+=evts.length;addLog(`${sport.name}: ${evts.length} games → ${mkts.length} markets`,'info');}
-    await sleep(4000);
+    await sleep(6000);
   }
   allArbs=detectArbs(allMkts);
   addLog(`${totalEvts} events · ${allMkts.length} markets · ${allArbs.length} arbs`,allArbs.length>0?'good':'info');
